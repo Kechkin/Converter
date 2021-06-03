@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="{% static 'css/main.css' %}" />
+</head>
+
+<body>
+    <div class="main_block">
+        <div class="add_data">
+            <form action="add/" method="post">
+                {% csrf_token %}
+                <h3>Добавьте курс</h3>
+                {{add.as_p}}
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+
+        <div class="search">
+            <form action="search/" method="post">
+                {% csrf_token %}
+                <h3>Поиск курса по времени</h3>
+                {{search.as_p}}
+                <button type="submit">найти</button>
+            </form>
+        </div>
+
+        <div class="button_link">
+            <form action="convert/" method="post">
+                {% csrf_token %}
+                <h3>Конвертация</h3>
+                {{convert.as_p}}
+                <button type="submit">Convert</button>
+            </form>
+        </div>
+</body>
+</html>
+
+
