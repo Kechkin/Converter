@@ -1,31 +1,21 @@
 import base64
 from datetime import datetime
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 
 from base.forms import *
 
 
-def check_token(func):
+def check_user(func):
     def wrapped(request):
-        if 'HTTP_AUTHORIZATION' in request.META:
+        if request.user.is_authenticated and 'HTTP_AUTHORIZATION' in request.META:
             user_data = request.META['HTTP_AUTHORIZATION'].split()
             username, password = (base64.b64decode(user_data[1])).decode().split(":")
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    return func(request)
-        return HttpResponse('invalid token', status=401)
-    return wrapped
-
-
-def check_auth(func):
-    def wrapped(request):
-        if request.user.is_authenticated:
-            return func(request)
-        else:
-            return HttpResponse('Unauthorized', status=401)
+            user = User.objects.get(username=username)
+            if user.is_active:
+                return func(request)
+        return HttpResponse('Unauthorized', status=401)
     return wrapped
 
 
@@ -51,19 +41,18 @@ def user_login(request):
     return render(request, "base/login.html", {"form": form})
 
 
-@check_token
-@check_auth
+@check_user
 def index(request):
     context = {
         "add": Add_data(),
         "search": Search_data(),
         "convert": Convert_data()
     }
+
     return render(request, "base/index.html", context)
 
 
-@check_token
-@check_auth
+@check_user
 def add(request):
     if request.method == "POST":
         form = Add_data(request.POST)
@@ -73,8 +62,7 @@ def add(request):
     return HttpResponse("Error")
 
 
-@check_token
-@check_auth
+@check_user
 def search(request):
     if request.method == "POST":
         form = Search_data(request.POST)
@@ -82,8 +70,7 @@ def search(request):
             data = form.cleaned_data
             if not data['time']:
                 data['time'] = datetime.today()
-
-            result = Convert.objects.filter(pub_time__lte=data['time'], currency=data['currency'])[:1]
+            result = Exchange_rate.objects.get_data(data['time'], data['currency'])
             for i in result:
                 context = {
                     "currency": data['currency'],
@@ -94,8 +81,7 @@ def search(request):
     return HttpResponse("There's no value or currency")
 
 
-@check_token
-@check_auth
+@check_user
 def convert(request):
     if request.method == "POST":
         form = Convert_data(request.POST)
@@ -106,11 +92,13 @@ def convert(request):
                 data['time'] = datetime.today()
             value1, value2 = None, None
 
-            result = Convert.objects.filter(pub_time__lte=data['time'], currency=data['currency'])[:1].values('value')
+            result = Exchange_rate.objects.filter(pub_time__lte=data['time'], currency=data['currency'])[:1].values(
+                'value')
             for item in result:
                 value1 = item['value']
 
-            result2 = Convert.objects.filter(pub_time__lte=data['time'], currency=data['currency2'])[:1].values('value')
+            result2 = Exchange_rate.objects.filter(pub_time__lte=data['time'], currency=data['currency2'])[:1].values(
+                'value')
 
             for item in result2:
                 value2 = item['value']

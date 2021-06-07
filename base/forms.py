@@ -3,12 +3,12 @@ from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-from base.models import Convert
+from base.models import Exchange_rate
 
 
 class Add_data(forms.ModelForm):
     class Meta:
-        model = Convert
+        model = Exchange_rate
         fields = ['currency', 'value']
 
     def clean_currency(self):
