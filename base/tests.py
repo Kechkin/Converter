@@ -2,7 +2,6 @@ import base64
 import json
 import os
 import django
-from django.views.decorators.csrf import csrf_exempt
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "convert.settings")
 django.setup()
@@ -59,7 +58,7 @@ class SimpleTest(TestCase):
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'Status': 200}
+            {"Response": "200"}
         )
 
     def test_api_search(self):
@@ -73,8 +72,7 @@ class SimpleTest(TestCase):
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'Status': 200,
-             'data': {'currency': 'USD',
+            {'data': {'currency': 'USD',
                       'time': '2021-05-27T11:48:49.340',
                       'value': '555.00'}}
         )
@@ -92,6 +90,5 @@ class SimpleTest(TestCase):
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'Status': 200,
-             'data': {'currency': 'EURO', 'result': '11.40', 'time': '2021-05-27 12:22'}}
+            {'data': {'currency': 'EURO', 'result': '11.40', 'time': '2021-05-27 12:22'}}
         )

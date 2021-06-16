@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from base.models import ExchangeRate
 
 
-class Add_data(forms.ModelForm):
+class AddData(forms.ModelForm):
     class Meta:
         model = ExchangeRate
         fields = ['currency', 'value']
@@ -18,12 +18,12 @@ class Add_data(forms.ModelForm):
         return currency
 
 
-class Search_data(forms.Form):
+class SearchData(forms.Form):
     currency = forms.CharField(max_length=5, label="Валюта")
     time = forms.CharField(max_length=255, label="Время", required=False)
 
 
-class Convert_data(forms.Form):
+class ConvertData(forms.Form):
     currency = forms.CharField(max_length=5, label="Валюта 1")
     currency2 = forms.CharField(max_length=5, label="Валюта 2")
     time = forms.CharField(max_length=255, label="Время", required=False)

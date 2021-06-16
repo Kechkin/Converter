@@ -18,7 +18,7 @@ def check_user(func):
                 user = User.objects.get(username=username)
                 if user.is_active:
                     return func(request)
-        return HttpResponse('Unauthorized', status=401)
+        return HttpResponse('Unauthenticated', status=401)
 
     return wrapped
 
@@ -29,9 +29,7 @@ def check_http(request_list):
             if request.method in request_list:
                 return func(request, *args)
             return HttpResponse(f"{request.method} method not allowed")
-
         return inner
-
     return wrapped
 
 
@@ -60,84 +58,105 @@ def user_login(request):
 @check_user
 def index(request):
     context = {
-        "add": Add_data(),
-        "search": Search_data(),
-        "convert": Convert_data()
+        "add": AddData(),
+        "search": SearchData(),
+        "convert": ConvertData()
     }
     return render(request, "base/index.html", context)
-
-
-@check_http(["POST"])
-@check_user
-def add(request):
-    form = Add_data(request.POST)
-    if form.is_valid():
-        form.save()
-        return redirect('/')
-    return HttpResponse("Error")
 
 
 @check_http(['POST'])
 @check_user
 def api_add(request):
     data = json.loads(request.body)
-    form = Add_data(data)
+    form = AddData(data)
     if form.is_valid():
-        form.save()
-        return JsonResponse({"Status": HttpResponse.status_code})
-    return JsonResponse({"Response": "400"})
+        try:
+            form.save()
+            return JsonResponse({"Response": "200"})
+        except Exception as e:
+            return JsonResponse({"Error": e})
+    return JsonResponse({"Error": "invalid data"})
 
 
 @check_http(['POST'])
 @check_user
 def api_search(request):
     data_json = json.loads(request.body)
-    form = Search_data(data_json)
+    form = SearchData(data_json)
     if form.is_valid():
-        data = form.cleaned_data
-        return search(request, data)
-    return JsonResponse({"Response": "400"})
+        try:
+            data = form.cleaned_data
+            ctx = search(data)
+            return JsonResponse(ctx)
+        except Exception as e:
+            return JsonResponse({"Error": e})
+    return JsonResponse({"Error": "invalid data"})
 
 
 @check_user
 @check_http(['POST'])
 def api_convert(request):
     data_json = json.loads(request.body)
-    form = Convert_data(data_json)
+    form = ConvertData(data_json)
     if form.is_valid():
         data = form.cleaned_data
-        return convert(request, data)
-    return JsonResponse({"Response": "400"})
+        ctx = convert(data)
+        try:
+            return JsonResponse(ctx)
+        except Exception as e:
+            return JsonResponse({"Error": e})
+    return JsonResponse({"Error": "invalid data"})
 
 
 @check_http(["POST"])
 @check_user
-def search(request, data=None):
-    form = Search_data(request.POST)
-    if data is None and form.is_valid():
+def add_ui(request):
+    form = AddData(request.POST)
+    if form.is_valid():
+        form.save()
+        return redirect('/')
+    return HttpResponse("invalid data")
+
+
+@check_http(["POST"])
+@check_user
+def search_ui(request):
+    form = SearchData(request.POST)
+    if form.is_valid():
         data = form.cleaned_data
+        context = search(data)
+        return render(request, "base/search.html", {"context": context})
+    return HttpResponse("invalid data")
+
+
+@check_http(["POST"])
+@check_user
+def convert_ui(request):
+    form = ConvertData(request.POST)
+    if form.is_valid():
+        data = form.cleaned_data
+        ctx = convert(data)
+        return render(request, "base/convert.html", {"context": ctx})
+    return HttpResponse("invalid data")
+
+
+def search(data):
     if not data['time']:
         data['time'] = datetime.today()
     result = ExchangeRate.objects.get_course_value(data['time'], data['currency'])
     for i in result:
         context = {
-            "Status": HttpResponse.status_code,
             "data": {
                 "currency": data['currency'],
                 "time": i.pub_time,
                 "value": i.value
             }
         }
-        return JsonResponse(context)
-    return HttpResponse("There's no value or currency")
+        return context
 
 
-@check_http(["POST"])
-@check_user
-def convert(request, data=None):
-    form = Convert_data(request.POST)
-    if data is None and form.is_valid():
-        data = form.cleaned_data
+def convert(data):
     if not data['time']:
         data['time'] = datetime.today()
     value1, value2 = None, None
@@ -152,15 +171,12 @@ def convert(request, data=None):
 
     for item in result2:
         value2 = item['value']
-
-        res_data = (data['money'] * value1) / value2
-        ctx = {
-            "Status": HttpResponse.status_code,
-            "data": {
-                "currency": data['currency'],
-                'time': data['time'],
-                'result': "%.2f" % res_data
-            }
+    res_data = (data['money'] * value1) / value2
+    ctx = {
+        "data": {
+            "currency": data['currency'],
+            'time': data['time'],
+            'result': "%.2f" % res_data
         }
-        return JsonResponse(ctx)
-    return HttpResponse("There's no value or currency")
+    }
+    return ctx
