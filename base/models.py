@@ -6,14 +6,11 @@ from django.db import models
 # Create your models here.
 
 class Manager_Search_data(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset()
-
-    def get_data(self, time, currency):
+    def get_course_value(self, time, currency):
         return self.get_queryset().filter(pub_time__lte=time, currency=currency)[:1]
 
 
-class Exchange_rate(models.Model):
+class ExchangeRate(models.Model):
     currency = models.CharField(max_length=5, verbose_name="Валюта")
     value = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="Значение",
                                 validators=[MinValueValidator(Decimal('0.01'))])
