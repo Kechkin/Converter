@@ -29,7 +29,9 @@ def check_http(request_list):
             if request.method in request_list:
                 return func(request, *args)
             return HttpResponse(f"{request.method} method not allowed")
+
         return inner
+
     return wrapped
 
 
@@ -73,10 +75,10 @@ def api_add(request):
     if form.is_valid():
         try:
             form.save()
-            return JsonResponse({"Response": "200"})
+            return JsonResponse({"Data": form.cleaned_data})
         except Exception as e:
             return JsonResponse({"Error": e})
-    return JsonResponse({"Error": "invalid data"})
+    return JsonResponse({"Error": form.cleaned_data})
 
 
 @check_http(['POST'])
@@ -91,7 +93,7 @@ def api_search(request):
             return JsonResponse(ctx)
         except Exception as e:
             return JsonResponse({"Error": e})
-    return JsonResponse({"Error": "invalid data"})
+    return JsonResponse({"Error": form.cleaned_data})
 
 
 @check_user
@@ -100,13 +102,13 @@ def api_convert(request):
     data_json = json.loads(request.body)
     form = ConvertData(data_json)
     if form.is_valid():
-        data = form.cleaned_data
-        ctx = convert(data)
         try:
+            data = form.cleaned_data
+            ctx = convert(data)
             return JsonResponse(ctx)
         except Exception as e:
             return JsonResponse({"Error": e})
-    return JsonResponse({"Error": "invalid data"})
+    return JsonResponse({"Error": form.cleaned_data})
 
 
 @check_http(["POST"])
@@ -116,7 +118,7 @@ def add_ui(request):
     if form.is_valid():
         form.save()
         return redirect('/')
-    return HttpResponse("invalid data")
+    return HttpResponse(f"invalid date {form.cleaned_data}")
 
 
 @check_http(["POST"])
@@ -124,10 +126,13 @@ def add_ui(request):
 def search_ui(request):
     form = SearchData(request.POST)
     if form.is_valid():
-        data = form.cleaned_data
-        context = search(data)
-        return render(request, "base/search.html", {"context": context})
-    return HttpResponse("invalid data")
+        try:
+            data = form.cleaned_data
+            context = search(data)
+            return render(request, "base/search.html", {"context": context})
+        except Exception as e:
+            return HttpResponse(f"Error: {e}")
+    return HttpResponse(f"invalid date {form.cleaned_data}")
 
 
 @check_http(["POST"])
@@ -135,10 +140,13 @@ def search_ui(request):
 def convert_ui(request):
     form = ConvertData(request.POST)
     if form.is_valid():
-        data = form.cleaned_data
-        ctx = convert(data)
-        return render(request, "base/convert.html", {"context": ctx})
-    return HttpResponse("invalid data")
+        try:
+            data = form.cleaned_data
+            ctx = convert(data)
+            return render(request, "base/convert.html", {"context": ctx})
+        except Exception as e:
+            return HttpResponse(f"Error: {e}")
+    return HttpResponse(f"invalid date {form.cleaned_data}")
 
 
 def search(data):

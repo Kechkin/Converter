@@ -28,6 +28,18 @@ class ConvertData(forms.Form):
     currency2 = forms.CharField(max_length=5, label="Валюта 2")
     time = forms.CharField(max_length=255, label="Время", required=False)
     money = forms.DecimalField(label="Сумма")
+    #
+    # def clean_currency1(self):
+    #     currency = self.cleaned_data['currency']
+    #     if not currency.isalpha():
+    #         raise ValidationError('Error')
+    #     return currency
+    #
+    # def clean_currency2(self):
+    #     currency2 = self.cleaned_data['currency2']
+    #     if not currency2.isalpha():
+    #         raise ValidationError('Error')
+    #     return currency2
 
 
 class UserLoginForm(AuthenticationForm):

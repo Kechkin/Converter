@@ -58,7 +58,7 @@ class SimpleTest(TestCase):
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {"Response": "200"}
+            {'Data': {'currency': 'USD', 'value': '56.7'}}
         )
 
     def test_api_search(self):
