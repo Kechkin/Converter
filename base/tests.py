@@ -31,7 +31,6 @@ class SimpleTest(TestCase):
         response = c.post('/add/', **auth_headers)
         return self.assertEqual(response.status_code, 200)
 
-    #
     def test_post_search(self):
         c = Client()
         c.login(username='tester', password='dark5550505')

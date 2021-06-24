@@ -5,8 +5,20 @@
     <title>Title</title>
 </head>
 <body>
-    <p>data: </p>
-    {% csrf_token %}
-    <p>{{context}}</p>
+    <h3>Hello, {{user}}!</h3>
+        <p>{{context}}</p>
+       <form action="{% url 'search' %}" method='post'>
+          {% csrf_token %}
+          {% for field in form %}
+          <div>
+              {{ field.label_tag }}
+              {{ field }}
+              <div>
+                  {{ field.errors }}
+              </div>
+          </div>
+         {% endfor %}
+          <button type="submit">найти</button>
+      </form>
 </body>
 </html>

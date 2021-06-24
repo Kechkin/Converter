@@ -2,9 +2,11 @@ import base64
 import json
 from datetime import datetime
 from django.contrib.auth import login
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from base.forms import *
+from django.contrib.auth.decorators import permission_required
 
 
 def check_user(func):
@@ -69,7 +71,10 @@ def index(request):
 
 @check_http(['POST'])
 @check_user
+@permission_required('base.add_ExchangeRate', raise_exception=True)
 def api_add(request):
+    if not request.user.has_perm('base.add_ExchangeRate'):
+        raise PermissionDenied
     data = json.loads(request.body)
     form = AddData(data)
     if form.is_valid():
@@ -83,7 +88,10 @@ def api_add(request):
 
 @check_http(['POST'])
 @check_user
+@permission_required('base.view_ExchangeRate', raise_exception=True)
 def api_search(request):
+    if not request.user.has_perm('base.view_ExchangeRate'):
+        raise PermissionDenied
     data_json = json.loads(request.body)
     form = SearchData(data_json)
     if form.is_valid():
@@ -98,7 +106,10 @@ def api_search(request):
 
 @check_user
 @check_http(['POST'])
+@permission_required('base.add_ExchangeRate', raise_exception=True)
 def api_convert(request):
+    if not request.user.has_perm('base.add_ExchangeRate'):
+        raise PermissionDenied
     data_json = json.loads(request.body)
     form = ConvertData(data_json)
     if form.is_valid():
@@ -111,42 +122,52 @@ def api_convert(request):
     return JsonResponse({"Error": form.cleaned_data})
 
 
-@check_http(["POST"])
 @check_user
+@check_http(["POST", "GET"])
+@permission_required('base.add_ExchangeRate', raise_exception=True)
 def add_ui(request):
+    if not request.user.has_perm('base.add_ExchangeRate'):
+        raise PermissionDenied
     form = AddData(request.POST)
     if form.is_valid():
         form.save()
         return redirect('/')
-    return HttpResponse(f"invalid date {form.cleaned_data}")
+    else:
+        form = AddData(request.POST)
+    return render(request, 'base/add.html', {'form': form})
 
 
-@check_http(["POST"])
 @check_user
+@check_http(["POST", "GET"])
+@permission_required('base.view_ExchangeRate', raise_exception=True)
 def search_ui(request):
+    if not request.user.has_perm('base.view_ExchangeRate'):
+        raise PermissionDenied
+
     form = SearchData(request.POST)
     if form.is_valid():
-        try:
-            data = form.cleaned_data
-            context = search(data)
-            return render(request, "base/search.html", {"context": context})
-        except Exception as e:
-            return HttpResponse(f"Error: {e}")
-    return HttpResponse(f"invalid date {form.cleaned_data}")
+        data = form.cleaned_data
+        context = search(data)
+        return render(request, "base/search.html", {"context": context})
+    else:
+        form = SearchData(request.POST)
+    return render(request, 'base/search.html', {'form': form})
 
 
-@check_http(["POST"])
 @check_user
+@check_http(["POST"])
+@permission_required('base.add_ExchangeRate', raise_exception=True)
 def convert_ui(request):
+    if not request.user.has_perm('base.add_ExchangeRate'):
+        raise PermissionDenied
     form = ConvertData(request.POST)
     if form.is_valid():
-        try:
-            data = form.cleaned_data
-            ctx = convert(data)
-            return render(request, "base/convert.html", {"context": ctx})
-        except Exception as e:
-            return HttpResponse(f"Error: {e}")
-    return HttpResponse(f"invalid date {form.cleaned_data}")
+        data = form.cleaned_data
+        ctx = convert(data)
+        return render(request, "base/convert.html", {"context": ctx})
+    else:
+        form = ConvertData(request.POST)
+    return render(request, "base/convert.html", {"form": form})
 
 
 def search(data):

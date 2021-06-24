@@ -8,7 +8,10 @@
 </head>
 
 <body>
+    <h3>Hello, {{user}}!</h3>
+
     <div class="main_block">
+
         <div class="add_data">
             <form action="add/" method="post">
                 {% csrf_token %}
@@ -18,7 +21,7 @@
             </form>
         </div>
 
-        <div class="search">
+        <div class="search_data">
             <form action="search/" method="post">
                 {% csrf_token %}
                 <h3>Поиск курса по времени</h3>
@@ -27,7 +30,7 @@
             </form>
         </div>
 
-        <div class="button_link">
+        <div class="convert">
             <form action="convert/" method="post">
                 {% csrf_token %}
                 <h3>Конвертация</h3>
@@ -35,6 +38,7 @@
                 <button type="submit">Convert</button>
             </form>
         </div>
+    </div>
 </body>
 </html>
 

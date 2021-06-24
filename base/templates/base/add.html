@@ -5,9 +5,8 @@
     <title>Title</title>
 </head>
 <body>
- <h3>Hello, {{user}}!</h3>
-        <p>{{context}}</p>
-       <form action="{% url 'convert' %}" method='post'>
+      <h3>Hello, {{user}}!</h3>
+       <form action="{% url 'add' %}" method='post'>
           {% csrf_token %}
           {% for field in form %}
           <div>
@@ -18,7 +17,7 @@
               </div>
           </div>
          {% endfor %}
-          <button type="submit">найти</button>
+          <button type="submit">Добавить</button>
       </form>
 </body>
 </html>
