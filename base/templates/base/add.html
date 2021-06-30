@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+      <h3>Hello, {{user}}!</h3>
+       <form action="{% url 'add' %}" method='post'>
+          {% csrf_token %}
+          {% for field in form %}
+          <div>
+              {{ field.label_tag }}
+              {{ field }}
+              <div>
+                  {{ field.errors }}
+              </div>
+          </div>
+         {% endfor %}
+          <button type="submit">Добавить</button>
+      </form>
+</body>
+</html>
