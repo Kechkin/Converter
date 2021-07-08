@@ -1,12 +1,25 @@
 import base64
 import json
-from datetime import datetime
-from django.contrib.auth import login
+from django.contrib.auth import login, authenticate
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
 from base.forms import *
-from django.contrib.auth.decorators import permission_required
+from base.service import *
+
+
+def check_permissions(perm):
+    def wrapped(func):
+        def inner(request, *args):
+            if request.user.is_active:
+                perm_list = request.user.get_user_permissions()
+                if perm in perm_list:
+                    return func(request, *args)
+            raise PermissionDenied
+
+        return inner
+
+    return wrapped
 
 
 def check_user(func):
@@ -17,8 +30,8 @@ def check_user(func):
             if 'HTTP_AUTHORIZATION' in request.META:
                 user_data = request.META['HTTP_AUTHORIZATION'].split()
                 username, password = (base64.b64decode(user_data[1])).decode().split(":")
-                user = User.objects.get(username=username)
-                if user.is_active:
+                user = authenticate(username=username, password=password)
+                if user is not None:
                     return func(request)
         return HttpResponse('Unauthenticated', status=401)
 
@@ -71,10 +84,8 @@ def index(request):
 
 @check_http(['POST'])
 @check_user
-@permission_required('base.add_ExchangeRate', raise_exception=True)
+@check_permissions('base.add_exchangerate')
 def api_add(request):
-    if not request.user.has_perm('base.add_ExchangeRate'):
-        raise PermissionDenied
     data = json.loads(request.body)
     form = AddData(data)
     if form.is_valid():
@@ -88,10 +99,8 @@ def api_add(request):
 
 @check_http(['POST'])
 @check_user
-@permission_required('base.view_ExchangeRate', raise_exception=True)
+@check_permissions('base.view_exchangerate')
 def api_search(request):
-    if not request.user.has_perm('base.view_ExchangeRate'):
-        raise PermissionDenied
     data_json = json.loads(request.body)
     form = SearchData(data_json)
     if form.is_valid():
@@ -106,10 +115,8 @@ def api_search(request):
 
 @check_user
 @check_http(['POST'])
-@permission_required('base.add_ExchangeRate', raise_exception=True)
+@check_permissions('base.add_exchangerate')
 def api_convert(request):
-    if not request.user.has_perm('base.add_ExchangeRate'):
-        raise PermissionDenied
     data_json = json.loads(request.body)
     form = ConvertData(data_json)
     if form.is_valid():
@@ -124,10 +131,8 @@ def api_convert(request):
 
 @check_user
 @check_http(["POST", "GET"])
-@permission_required('base.add_ExchangeRate', raise_exception=True)
+@check_permissions('base.add_exchangerate')
 def add_ui(request):
-    if not request.user.has_perm('base.add_ExchangeRate'):
-        raise PermissionDenied
     form = AddData(request.POST)
     if form.is_valid():
         form.save()
@@ -139,11 +144,8 @@ def add_ui(request):
 
 @check_user
 @check_http(["POST", "GET"])
-@permission_required('base.view_ExchangeRate', raise_exception=True)
+@check_permissions('base.view_exchangerate')
 def search_ui(request):
-    if not request.user.has_perm('base.view_ExchangeRate'):
-        raise PermissionDenied
-
     form = SearchData(request.POST)
     if form.is_valid():
         data = form.cleaned_data
@@ -156,10 +158,8 @@ def search_ui(request):
 
 @check_user
 @check_http(["POST"])
-@permission_required('base.add_ExchangeRate', raise_exception=True)
+@check_permissions('base.add_exchangerate')
 def convert_ui(request):
-    if not request.user.has_perm('base.add_ExchangeRate'):
-        raise PermissionDenied
     form = ConvertData(request.POST)
     if form.is_valid():
         data = form.cleaned_data
@@ -168,44 +168,3 @@ def convert_ui(request):
     else:
         form = ConvertData(request.POST)
     return render(request, "base/convert.html", {"form": form})
-
-
-def search(data):
-    if not data['time']:
-        data['time'] = datetime.today()
-    result = ExchangeRate.objects.get_course_value(data['time'], data['currency'])
-    for i in result:
-        context = {
-            "data": {
-                "currency": data['currency'],
-                "time": i.pub_time,
-                "value": i.value
-            }
-        }
-        return context
-
-
-def convert(data):
-    if not data['time']:
-        data['time'] = datetime.today()
-    value1, value2 = None, None
-
-    result = ExchangeRate.objects.filter(pub_time__lte=data['time'], currency=data['currency'])[:1].values(
-        'value')
-    for item in result:
-        value1 = item['value']
-
-    result2 = ExchangeRate.objects.filter(pub_time__lte=data['time'], currency=data['currency2'])[:1].values(
-        'value')
-
-    for item in result2:
-        value2 = item['value']
-    res_data = (data['money'] * value1) / value2
-    ctx = {
-        "data": {
-            "currency": data['currency'],
-            'time': data['time'],
-            'result': "%.2f" % res_data
-        }
-    }
-    return ctx
