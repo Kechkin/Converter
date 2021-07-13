@@ -1,6 +1,8 @@
 import base64
 import json
+
 from django.contrib.auth import login, authenticate
+from django.contrib.auth.models import Permission
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect
@@ -12,8 +14,9 @@ def check_permissions(perm):
     def wrapped(func):
         def inner(request, *args):
             if request.user.is_active:
-                perm_list = request.user.get_user_permissions()
-                if perm in perm_list:
+                if request.user.is_superuser:
+                    return func(request, *args)
+                elif Permission.objects.filter(codename=perm, user=request.user):
                     return func(request, *args)
             raise PermissionDenied
 
@@ -84,7 +87,7 @@ def index(request):
 
 @check_http(['POST'])
 @check_user
-@check_permissions('base.add_exchangerate')
+@check_permissions('add_exchangerate')
 def api_add(request):
     data = json.loads(request.body)
     form = AddData(data)
@@ -99,7 +102,7 @@ def api_add(request):
 
 @check_http(['POST'])
 @check_user
-@check_permissions('base.view_exchangerate')
+@check_permissions('view_exchangerate')
 def api_search(request):
     data_json = json.loads(request.body)
     form = SearchData(data_json)
@@ -115,7 +118,7 @@ def api_search(request):
 
 @check_user
 @check_http(['POST'])
-@check_permissions('base.add_exchangerate')
+@check_permissions('add_exchangerate')
 def api_convert(request):
     data_json = json.loads(request.body)
     form = ConvertData(data_json)
@@ -131,7 +134,7 @@ def api_convert(request):
 
 @check_user
 @check_http(["POST", "GET"])
-@check_permissions('base.add_exchangerate')
+@check_permissions('add_exchangerate')
 def add_ui(request):
     form = AddData(request.POST)
     if form.is_valid():
@@ -144,7 +147,7 @@ def add_ui(request):
 
 @check_user
 @check_http(["POST", "GET"])
-@check_permissions('base.view_exchangerate')
+@check_permissions('view_exchangerate')
 def search_ui(request):
     form = SearchData(request.POST)
     if form.is_valid():
@@ -158,7 +161,7 @@ def search_ui(request):
 
 @check_user
 @check_http(["POST"])
-@check_permissions('base.add_exchangerate')
+@check_permissions('add_exchangerate')
 def convert_ui(request):
     form = ConvertData(request.POST)
     if form.is_valid():
@@ -168,3 +171,21 @@ def convert_ui(request):
     else:
         form = ConvertData(request.POST)
     return render(request, "base/convert.html", {"form": form})
+
+
+@check_user
+@check_http(['POST'])
+def average_value(request):
+    data_json = json.loads(request.body)
+    form = AverageValueForm(data_json)
+    if form.is_valid():
+        try:
+            data = form.cleaned_data
+            if request.user.groups.filter(name="test_group").exists():
+                ctx = find_average_orm(data)
+            else:
+                ctx = find_average_raw(data)
+            return JsonResponse(ctx)
+        except Exception as e:
+            return JsonResponse({"Error": e})
+    return JsonResponse({"Error": form.cleaned_data})

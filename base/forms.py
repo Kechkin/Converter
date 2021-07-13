@@ -33,7 +33,8 @@ class SearchData(forms.Form):
 class ConvertData(forms.Form):
     currency = forms.CharField(max_length=5, label="Валюта 1")
     currency2 = forms.CharField(max_length=5, label="Валюта 2")
-    time = forms.CharField(max_length=255, label="Время", required=False, widget=forms.TextInput(attrs={'placeholder': '2021-05-27 12:22'}))
+    time = forms.CharField(max_length=255, label="Время", required=False,
+                           widget=forms.TextInput(attrs={'placeholder': '2021-05-27 12:22'}))
     money = forms.DecimalField(label="Сумма")
 
     def clean_currency(self):
@@ -60,3 +61,16 @@ class CreateUserForm(UserCreationForm):
     class Meta:
         model = User
         fields = {'username', 'password1', 'password2'}
+
+
+class AverageValueForm(forms.Form):
+    currency = forms.CharField(max_length=5, label="Валюта")
+
+    time = forms.CharField(max_length=255, label="Время", required=False,
+                           widget=forms.TextInput(attrs={'placeholder': '2021-07-12 12:22'}))
+
+    start = forms.CharField(max_length=255, label="Время", required=False,
+                            widget=forms.TextInput(attrs={'placeholder': '2021-06-15 12:22'}))
+
+    end = forms.CharField(max_length=255, label="Время", required=False,
+                          widget=forms.TextInput(attrs={'placeholder': '2021-07-15 12:22'}))
