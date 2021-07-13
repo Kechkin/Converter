@@ -65,6 +65,7 @@ class CreateUserForm(UserCreationForm):
 
 class AverageValueForm(forms.Form):
     currency = forms.CharField(max_length=5, label="Валюта")
+    currency2 = forms.CharField(max_length=5, label="Валюта")
 
     time = forms.CharField(max_length=255, label="Время", required=False,
                            widget=forms.TextInput(attrs={'placeholder': '2021-07-12 12:22'}))
