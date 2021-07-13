@@ -95,59 +95,65 @@ class SimpleTest(TestCase):
     def test_average_days_orm(self):
         c = Client()
         data = {
-            "currency": "USD",
+            "currency": "EURO",
+            "currency2": "USD",
             "start": "2021-03-28",
-            "end": "2021-07-05"
+            "end": "2021-07-15"
         }
         c.login(username='nickolas', password='glasstaken123')
         response = c.post('/average_value/', json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'2021-06-30': '158.53', '2021-06-24': '87.50', '2021-06-23': '132.28', '2021-06-09': '51.24',
-             '2021-06-03': '100.00', '2021-05-27': '314.23', '2021-05-26': '87.50', '2021-05-25': '65.86'}
+            {'2021-07-13': '34.24', '2021-07-08': '105.25', '2021-06-30': '158.53', '2021-06-24': '87.50',
+             '2021-06-23': '132.28', '2021-06-09': '51.24', '2021-06-03': '100.00', '2021-05-27': '239.34',
+             '2021-05-26': '87.50', '2021-05-25': '82.24'}
         )
 
     def test_average_days_raw(self):
         c = Client()
         data = {
-            "currency": "USD",
+            "currency": "EURO",
+            "currency2": "USD",
             "start": "2021-03-28",
-            "end": "2021-07-05"
+            "end": "2021-07-15"
         }
         c.login(username='tester', password='dark5550505')
         response = c.post('/average_value/', json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'2021-06-30': '158.53', '2021-06-24': '87.50', '2021-06-23': '132.28', '2021-06-09': '51.24',
-             '2021-06-03': '100.00', '2021-05-27': '314.23', '2021-05-26': '87.50', '2021-05-25': '65.86'}
+            {'2021-07-13': '34.24', '2021-07-08': '105.25', '2021-06-30': '158.53', '2021-06-24': '87.50',
+             '2021-06-23': '132.28', '2021-06-09': '51.24', '2021-06-03': '100.00', '2021-05-27': '239.34',
+             '2021-05-26': '87.50', '2021-05-25': '82.24'}
         )
 
     def test_average_orm(self):
         c = Client()
         data = {
-            "currency": "USD",
-            "time": "2021-06-09",
+            "currency": "EURO",
+            "currency2": "USD",
+            "time": "2021-05-25",
         }
         c.login(username='nickolas', password='glasstaken123')
         response = c.post('/average_value/', json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'2021-06-09': '51.24'}
+            {'2021-05-25': '82.24'}
         )
 
     def test_average_raw(self):
         c = Client()
         data = {
-            "currency": "USD",
-            "time": "2021-06-09",
+            "currency": "EURO",
+            "currency2": "USD",
+            "time": "2021-05-25",
         }
         c.login(username='tester', password='dark5550505')
         response = c.post('/average_value/', json.dumps(data), content_type="application/json")
         self.assertEqual(response.status_code, 200)
         return self.assertJSONEqual(
             str(response.content, encoding='utf8'),
-            {'2021-06-09': '51.24'}
+            {'2021-05-25': '82.24'}
         )
